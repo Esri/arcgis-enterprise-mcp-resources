@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!--
+    Sample custom MCP tool for ArcGIS Enterprise 12.2: find-service-dependents.
+    Generated from the MCP API Archetype. It has no third-party runtime dependencies: HTTP calls use
+    the JDK's java.net.http.HttpClient, so the tool JAR contains only the tool's own classes.
+    The only change from the archetype is a pinned Surefire version so JUnit 5 tests always run.
+  -->
+
+  <groupId>com.example.mcp</groupId>
+  <artifactId>find-service-dependents</artifactId>
+  <version>1.0.0</version>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <mcp.shadedClassifier>deployment</mcp.shadedClassifier>
+    <mcp.targetJRE>21</mcp.targetJRE>
+    <arcgis-enterprise-version>12.2.0</arcgis-enterprise-version>
+    <org.json.version>20231013</org.json.version>
+    <junit-jupiter-engine-version>5.12.1</junit-jupiter-engine-version>
+    <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
+  </properties>
+
+  <dependencies>
+    <!-- Provided by ArcGIS Enterprise at run time; not packaged -->
+    <dependency>
+      <groupId>com.esri.arcgis.mcp.catalog</groupId>
+      <artifactId>mcp-api</artifactId>
+      <version>${arcgis-enterprise-version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.json</groupId>
+      <artifactId>json</artifactId>
+      <version>${org.json.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- Testing -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <version>${junit-jupiter-engine-version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
+        <configuration>
+          <release>${mcp.targetJRE}</release>
+        </configuration>
+      </plugin>
+      <!-- Pinned so JUnit 5 tests run on every Maven version -->
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>${maven-surefire-plugin.version}</version>
+      </plugin>
+      <!-- Generates config.json from SPI-registered IMCPTool implementations -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.5.0</version>
+        <executions>
+          <execution>
+            <id>generate-config-json</id>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>com.esri.arcgis.mcp.catalog.mcp.api.build.ConfigJsonGenerator</mainClass>
+              <classpathScope>compile</classpathScope>
+              <arguments>
+                <argument>${project.build.outputDirectory}/config.json</argument>
+                <argument>${mcp.targetJRE}</argument>
+              </arguments>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.4.2</version>
+      </plugin>
+      <!-- Builds the deployment JAR (no third-party classes to add for this sample) -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.6.0</version>
+        <configuration>
+          <shadedArtifactAttached>true</shadedArtifactAttached>
+          <shadedClassifierName>${mcp.shadedClassifier}</shadedClassifierName>
+          <createDependencyReducedPom>false</createDependencyReducedPom>
+          <filters>
+            <filter>
+              <artifact>*:*</artifact>
+              <excludes>
+                <exclude>**/ConfigJsonGenerator.class</exclude>
+              </excludes>
+            </filter>
+          </filters>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- Packages the deployment JAR and config.json as a ZIP archive -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>3.7.1</version>
+        <configuration>
+          <attach>false</attach>
+          <descriptors>
+            <descriptor>src/assembly/mcp.xml</descriptor>
+          </descriptors>
+        </configuration>
+        <executions>
+          <execution>
+            <id>create-mcp-archive</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- Gives the ZIP archive its deployable .mcp extension -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+          <execution>
+            <id>rename-mcp-archive</id>
+            <phase>package</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <move
+                  file="${project.build.directory}/${project.build.finalName}-mcp.zip"
+                  tofile="${project.build.directory}/${project.build.finalName}.mcp" />
+              </target>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>
