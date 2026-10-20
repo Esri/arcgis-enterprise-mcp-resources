@@ -91,7 +91,7 @@ layer-field-profile/
     │   └── resources/META-INF/services/
     │       └── com.esri.arcgis.mcp.catalog.mcp.api.tools.IMCPTool
     └── test/java/com/example/mcp/fieldprofile/
-        └── LayerFieldProfileTest.java        # 17 unit tests against a fake portal and feature service
+        └── LayerFieldProfileTest.java        # 18 unit tests against a fake portal and feature service
 ```
 
 `pom.xml` is the archetype's `pom.xml`, plus a pinned `maven-surefire-plugin` version so the JUnit 5 tests always run.
@@ -166,6 +166,6 @@ The tool works well with the server's built-in tools. For example: "Find the par
 
 - **Rename the tool.** Change `getName()` (consider a prefix such as `acme_layer_field_profile`), the package, and the class name in `META-INF/services`.
 - **Add inputs.** For example, a `where` filter or a `topValues` count. Add the property to `getInputSchema()`, read it in `execute()`, and validate it. Wrap a `where` clause in parentheses when you combine it with the tool's own conditions.
-- **Add statistics.** Add another `statsRow(...)` call, for example `sum` or `var`, and add the values to the result and the output schema.
+- **Add statistics.** Add a statistic type to an existing `statsRow(...)` call, for example `sum` or `var`, so it runs in the same query. Then add the value to the result and the output schema. Build `outStatistics` with the `outStatistics(...)` helper, which always sends a JSON array, as the REST API expects.
 - **Change the trusted hosts.** Edit `loadTrustedHosts()`. Keep the rule that the token is sent only to hosts you trust.
 - **Unit tests.** Extend `LayerFieldProfileTest`. `FakeServer` answers each request the tool makes, so you can test new behavior without a server.

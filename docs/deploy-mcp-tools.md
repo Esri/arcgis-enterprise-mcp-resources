@@ -97,7 +97,15 @@ The tool is available to clients right away; no restart is needed.
 
 ### Update a tool
 
-These versions don't have an update operation. To replace a registered tool with a new build, unregister it, then register the new file.
+To replace a registered tool with a new build, call the `register` operation again with the new file, as described in [Register a tool](#register-a-tool-1). The file must have the same file name as the registered file, for example `find-service-dependents-1.0.0.mcp`, so the URL is the same too:
+
+```bash
+curl -X POST "https://gis.example.com/server/mcp/admin/tools/find-service-dependents-1.0.0/register" \
+  -F "token=<token>" \
+  -F "file=@target/find-service-dependents-1.0.0.mcp"
+```
+
+If the file name is different, ArcGIS Enterprise treats the file as a new one, and registers it as an additional tool if its tool name is different. To deploy a build under a new file name, unregister the old file first.
 
 ### Unregister a tool
 

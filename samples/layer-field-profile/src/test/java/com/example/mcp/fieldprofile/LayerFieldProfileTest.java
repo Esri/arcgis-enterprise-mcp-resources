@@ -112,6 +112,24 @@ public class LayerFieldProfileTest {
     }
 
     @Test
+    public void groupByQuerySendsOutStatisticsAsArray() {
+        FakeServer server = new FakeServer();
+        payload(run(server, args(ITEM_URL, 0, "LANDUSE")));
+        Map<String, String> groupBy = null;
+        for (Map<String, String> f : server.forms) {
+            if (f.containsKey("groupByFieldsForStatistics")) {
+                groupBy = f;
+            }
+        }
+        assertNotNull(groupBy);
+        JSONArray stats = new JSONArray(groupBy.get("outStatistics"));
+        assertEquals(1, stats.length());
+        assertEquals("count", stats.getJSONObject(0).getString("statisticType"));
+        assertEquals("LANDUSE", stats.getJSONObject(0).getString("onStatisticField"));
+        assertEquals("value_count", stats.getJSONObject(0).getString("outStatisticFieldName"));
+    }
+
+    @Test
     public void fieldCanBeGivenByAlias() {
         JSONObject p = payload(run(new FakeServer(), args(ITEM_URL, 0, "Land Use")));
         assertEquals("LANDUSE", p.getJSONObject("field").getString("name"));
@@ -271,6 +289,9 @@ public class LayerFieldProfileTest {
 
         private static String query(Map<String, String> f) {
             String where = f.getOrDefault("where", "");
+            if (f.containsKey("outStatistics")) {
+                checkOutStatistics(f.get("outStatistics"));
+            }
             if ("true".equals(f.get("returnCountOnly"))) {
                 return where.endsWith("IS NULL") ? "{\"count\":50}" : "{\"count\":1000}";
             }
@@ -294,6 +315,22 @@ public class LayerFieldProfileTest {
                 return "{\"features\":[{\"attributes\":{\"MIN\":1577836800000,\"MAX\":1790812800000}}]}";
             }
             throw new AssertionError("Unexpected query: " + f);
+        }
+
+        /** outStatistics must be a JSON array of statistic definitions, as the ArcGIS REST API expects. */
+        private static void checkOutStatistics(String value) {
+            String v = value.trim();
+            if (!v.startsWith("[")) {
+                throw new AssertionError("outStatistics must be a JSON array: " + value);
+            }
+            JSONArray stats = new JSONArray(v);
+            for (int i = 0; i < stats.length(); i++) {
+                JSONObject stat = stats.optJSONObject(i);
+                if (stat == null || !stat.has("statisticType") || !stat.has("onStatisticField")
+                        || !stat.has("outStatisticFieldName")) {
+                    throw new AssertionError("Invalid statistic definition in outStatistics: " + value);
+                }
+            }
         }
 
         private static HttpResult ok(String body) {

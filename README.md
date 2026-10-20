@@ -1,11 +1,13 @@
-# MCP Extensibility for ArcGIS Enterprise
+# Extending ArcGIS Enterprise with MCP
 
-The ArcGIS Enterprise MCP server supports custom Model Context Protocol (MCP) tools in two ways:
+ArcGIS Enterprise allows developers to implement custom Model Context Protocol (MCP) tools using two approaches:
 
-- **Web tools** (geoprocessing services) written in Python.
-- **`.mcp` files** written in Java.
+- **Python-based web tools:** Create and publish geoprocessing services as web tools. Each geoprocessing service tagged with `MCP` is automatically exposed as a separate MCP tool in the default ArcGIS Enterprise MCP catalog.
+- **Java-based custom MCP tools:** Develop custom MCP tools in Java and package them as `.mcp` files for deployment to ArcGIS Enterprise.
 
-This repository covers the second option. It contains the resources you need to build and deploy custom MCP tools in Java. These tools are packaged as `.mcp` files, deployed to ArcGIS Enterprise, and made available to agentic clients through the ArcGIS Enterprise MCP catalog.
+This repository focuses on the **Java-based extensibility approach**. It provides the resources, examples, and guidance needed to develop, package, and deploy custom MCP tools as `.mcp` files.
+
+Once deployed, these tools can be added to ArcGIS Enterprise MCP catalogs, making them available for discovery and execution by AI agents and other MCP-compatible clients.
 
 ## Contents
 

@@ -77,3 +77,7 @@ From the repository root, run:
 ```
 
 To generate, build, and deploy a tool, see the [main README](../../README.md).
+
+## License
+
+The samples, documentation, and scripts in this repository are licensed under [Apache 2.0](../../License.txt). The artifacts in `artifacts/` are provided under the ArcGIS Enterprise license.

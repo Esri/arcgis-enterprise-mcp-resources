@@ -318,7 +318,7 @@ public class LayerFieldProfile implements IMCPTool {
         JSONObject grouped = s.post(query, form(
                 "where", name + " IS NOT NULL",
                 "groupByFieldsForStatistics", name,
-                "outStatistics", stat("count", name, "value_count").toString(),
+                "outStatistics", outStatistics(stat("count", name, "value_count")),
                 "orderByFields", "value_count DESC"));
         JSONArray groups = grouped.optJSONArray("features");
         List<JSONObject> values = new ArrayList<>();
@@ -437,11 +437,11 @@ public class LayerFieldProfile implements IMCPTool {
 
     private static JSONObject statsRow(Session s, String queryUrl, String where, String field, String... types)
             throws IOException, ToolException {
-        JSONArray stats = new JSONArray();
-        for (String t : types) {
-            stats.put(stat(t, field, t));
+        JSONObject[] stats = new JSONObject[types.length];
+        for (int i = 0; i < types.length; i++) {
+            stats[i] = stat(types[i], field, types[i]);
         }
-        JSONObject r = s.post(queryUrl, form("where", where, "outStatistics", stats.toString()));
+        JSONObject r = s.post(queryUrl, form("where", where, "outStatistics", outStatistics(stats)));
         JSONArray features = r.optJSONArray("features");
         JSONObject out = new JSONObject();
         if (features != null && features.length() > 0) {
@@ -456,8 +456,18 @@ public class LayerFieldProfile implements IMCPTool {
         return out;
     }
 
+    /** One statistic definition for the outStatistics parameter. */
     private static JSONObject stat(String type, String field, String outName) {
         return new JSONObject().put("statisticType", type).put("onStatisticField", field).put("outStatisticFieldName", outName);
+    }
+
+    /** The outStatistics parameter: a JSON array of statistic definitions, even when there's only one. */
+    static String outStatistics(JSONObject... stats) {
+        JSONArray array = new JSONArray();
+        for (JSONObject stat : stats) {
+            array.put(stat);
+        }
+        return array.toString();
     }
 
     /** Per-call state: the HTTP client, portal URL, caller token, and logger. */
