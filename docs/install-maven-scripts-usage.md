@@ -1,15 +1,15 @@
 # Maven Installer Scripts Reference
 
-This guide describes how to use the Maven installer scripts and how they behave:
+This guide is for developers who install the MCP API and archetype in their development environment. It describes the following scripts, their validation checks, and troubleshooting steps:
 
 - `install-maven-artifacts.bat` (Windows)
 - `install-maven-artifacts.sh` (Linux/macOS)
 
-For the end-to-end workflow of creating a custom MCP tool, see the [main README](./README.md).
+For the end-to-end workflow of creating a custom MCP tool, see the [main README](../README.md).
 
 ## Purpose
 
-Both scripts install the MCP API and MCP API Archetype artifacts for a selected ArcGIS Enterprise version into your local Maven repository (`~/.m2/repository`). After installation, you can reference the MCP API as a dependency and generate new projects from the archetype.
+Both scripts install the MCP API and MCP API Archetype artifacts for a selected ArcGIS Enterprise version into your local Maven repository (normally `~/.m2/repository`). After installation, you can reference the MCP API as a dependency and generate new projects from the archetype.
 
 ## Supported ArcGIS Enterprise versions
 
@@ -23,13 +23,15 @@ Pass exactly one argument: the full version of your ArcGIS Enterprise deployment
 | 11.3 | `11.3.0` | 17 | `artifacts/11.3.0` |
 | 11.1 | `11.1.0` | 11 | `artifacts/11.1.0` |
 
-The installer argument is also the Maven version of the installed artifacts, and the `archetypeVersion` you use to generate a project. The scripts find the files in the folder with the same name, for example `artifacts/12.2.0` for `12.2.0`.
+Use the same full version for the installer argument, artifact directory, and `archetypeVersion`. For example, `12.2.0` installs artifacts from `artifacts/12.2.0` and is the archetype version used to generate a project.
 
 The scripts check the JDK in `JAVA_HOME`. If its major version doesn't match the required version, the script stops with an error.
 
 ## Usage
 
 The scripts locate artifacts relative to their own location, so you can run them from any directory. The `artifacts/` folder must be in the same directory as the script.
+
+The examples below assume your current directory contains the script. From another directory, specify the script's path.
 
 ### Windows
 
@@ -67,7 +69,7 @@ Before installing anything, the scripts check that:
 3. The artifacts folder for that version (for example `artifacts/12.2.0`) exists and contains all four required files (listed below).
 4. `JAVA_HOME` points to a JDK (it contains `bin/javac`).
 5. The JDK major version matches the requirement for the selected ArcGIS Enterprise version.
-6. Maven is installed and available on `PATH`.
+6. Maven is available on `PATH` and `mvn -version` runs successfully.
 
 ## Installed artifacts
 
@@ -94,16 +96,29 @@ Both are installed under the Maven group ID `com.esri.arcgis.mcp.catalog`.
 | Error message | Cause and resolution |
 | --- | --- |
 | `Invalid ArcGIS Enterprise version` | The argument isn't a supported version. Use one of the full versions listed above, for example `12.2.0`. If you pass a short form such as `12.2`, the message suggests the full version. |
-| `Artifacts folder not found` | The folder for that version, for example `artifacts/12.2.0`, is missing. Make sure the `artifacts/` folder is in the same directory as the script. |
+| `Artifacts folder not found` | The folder for that version, for example `artifacts/12.2.0`, is missing. Verify that the `artifacts/` folder is in the same directory as the script. |
 | `Required artifact not found` | One of the four files is missing from the version's folder, for example `artifacts/12.2.0`. Get a complete copy of the repository, or of that folder, and check the file list in its `readme.md`. |
 | `JAVA_HOME environment variable is not defined correctly` | `JAVA_HOME` isn't set, or it points to a JRE. Set it to the root folder of a JDK installation. |
 | `requires JDK <N>, but detected JDK <M>` | Set `JAVA_HOME` to the required JDK version. On Windows, open a new terminal after you change it. |
-| `Could not determine JDK version` | Running `javac -version` didn't print a `javac <version>` line. Run `"$JAVA_HOME/bin/javac" -version` manually to check your JDK installation. Extra lines such as `Picked up JAVA_TOOL_OPTIONS: ...` are ignored. |
-| `Maven is not installed or not available on PATH` | Install Apache Maven and add its `bin` folder to `PATH`. Check with `mvn -version`. |
-| `Failed to install the MCP API artifact` / `Failed to install the MCP API Archetype artifact` | Review the Maven output above the error. Common causes include a corrupted download or a lack of write access to `~/.m2/repository`. |
+| `Could not determine JDK version` | Running `javac -version` didn't print a `javac <version>` line. Use the commands below to check your JDK installation. Extra lines such as `Picked up JAVA_TOOL_OPTIONS: ...` are ignored. |
+| `Maven is not installed or not available on PATH` | Install Apache Maven and add its `bin` folder to `PATH`. Confirm that `mvn -version` runs successfully. |
+| `Failed to install the MCP API artifact` / `Failed to install the MCP API Archetype artifact` | Review the Maven output above the error. Common causes include a corrupted download or a lack of write access to your local Maven repository (normally `~/.m2/repository`). |
+
+### Check the JDK version
+
+**Windows (PowerShell)**
+
+```powershell
+& "$env:JAVA_HOME\bin\javac.exe" -version
+```
+
+**Linux/macOS**
+
+```bash
+"$JAVA_HOME/bin/javac" -version
+```
 
 ## Notes
 
-- Use the same full version for the installer and for `archetypeVersion`. For example, run `install-maven-artifacts.sh 12.2.0`, then generate projects with `-DarchetypeVersion=12.2.0`.
 - You can install several versions side by side. Each version is stored separately in your local Maven repository.
-- If you run the script again for a version that's already installed, it overwrites the existing installation.
+- If you run the script again for a version that's already installed, it replaces the local copies of these two artifacts for that version.
